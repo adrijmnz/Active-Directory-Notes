@@ -1,7 +1,6 @@
-# Active-Directory-Notes
+# ACTIVE DIRECTORY NOTES
 All you need about Active Directory
 
-# ACTIVE DIRECTORY NOTES
 
 [Domain Enumeration](ACTIVE%20DIRECTORY%20NOTES/Domain%20Enumeration.md)
 
