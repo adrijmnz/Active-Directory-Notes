@@ -64,7 +64,7 @@ Para enumerar las OUs donde LAPS está en uso junto con los usuarios que pueden 
 
 AD Module: `Get-LapsPermissions.ps1`
 
-LAPS Module: `Import-Module C:\AD\Tools\AdmPwd.PS\AdmPwd.PS.psd1` && `Find-AdmPwdExtendedRights -Identity OUDistinguishedName`
+LAPS Module: `Import-Module C:AdmPwd.PS.psd1` && `Find-AdmPwdExtendedRights -Identity OUDistinguishedName`
 
 Priv. Esc. LAPS Abuse
 
