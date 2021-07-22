@@ -160,7 +160,6 @@ Busque la clave de confianza [In] del niño al padre.
     /rc4: /user:Administrator /service:krbtgt
     /target: /ticket:C:\trust_tkt.kirbi"'`
 
-    ![images/Cross%20Trust%20Attacks/Untitled%204.png](images/Cross%20Trust%20Attacks/Untitled%204.png)
 
 - Obtenga un TGS para un servicio (CIFS a continuación) en el dominio de destino utilizando el ticket de confianza falsificado con Kekeo ([https://github.com/gentilkiwi/kekeo/](https://github.com/gentilkiwi/kekeo/)):
 
